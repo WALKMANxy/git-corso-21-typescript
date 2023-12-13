@@ -1,0 +1,64 @@
+type Person = {
+    name : string
+    surname : string
+    age : number
+    fiscalCode? : string
+    address? : {
+        street : string
+        civic : string
+    }
+    phone? : {
+        brand : string,
+        model : string
+
+    }
+}
+
+const person : Person = {
+    name : "Pippo",
+    surname : "Pluto",
+    age : 10,
+    fiscalCode : "12345678901",
+    address : {
+        street : "string",
+        civic : "3a"
+    },
+    phone : {
+        brand : "Apple",
+        model : "iPhone"
+    }
+}
+
+const a = 4 || 2
+console.log(a)
+
+const a1 = 4 && 2
+console.log(a1)
+
+const s = 0 || false || NaN || "Pippo"
+
+const x = person.name
+const y = person  ["name"]
+const {name : x5, surname} = person
+console.log(person)
+
+const { address : { street }} = person 
+console.log(person)
+
+
+ 
+const f = ({address : { street }, phone : {brand}} : Person) => x
+console.log(f(person))
+
+
+const [x4, ...rest] = [3, "pippo","caio"]
+const { length : arrLength } = [3,"pippo","caio"]
+console.log(arrLength)
+
+
+const f2 = (x:number = 3) => x * x
+const f2OfF2 = (x?:number) => x * x
+
+console.log(f2(3))
+
+//crea una funzione che prende in ingresso un array di persone e ritorna la media dell'età delle persone che ci sono dentro, con una funzione di test 
