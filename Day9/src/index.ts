@@ -1,5 +1,8 @@
 import express, {Request, Response} from 'express';
-import {v4 as uuidv4} from 'uuid';
+import { query, validationResult } from 'express-validator';
+
+import {v4 as uuidv4, v4} from 'uuid';
+
 uuidv4();
 const app = express();
 app.use(express.json());
@@ -24,27 +27,27 @@ app.get('/posts', async (req, res) => {
 
 const users = [
   {
-    id: '1',
+    id: v4(),
     name: 'John',
     surname: 'Doe',
   },
   {
-    id: '2',
+    id: v4(),
     name: 'Jane',
     surname: 'Smith',
   },
   {
-    id: '3',
+    id: v4(),
     name: 'Michael',
     surname: 'Johnson',
   },
   {
-    id: '4',
+    id: v4(),
     name: 'Emily',
     surname: 'Davis',
   },
   {
-    id: '5',
+    id: v4(),
     name: 'David',
     surname: 'Brown',
   },
@@ -79,7 +82,7 @@ app.get('/users/:id', (req: Request, res: Response) => {
   const userId = req.params.id;
   const user = users.find((u) => u.id === userId);
 
-  if (!user) {
+  if (user === undefined) {
     res.status(404).json({ error: 'User not found' });
   } else {
     res.json({ user });
@@ -94,8 +97,8 @@ app.delete('/users/:id', (req: Request, res: Response) => {
   if (index === -1) {
     res.status(404).json({ error: 'User not found' });
   } else {
-    const deletedUser = users.splice(index, 1);
-    res.json({ deletedUser: deletedUser[0] });
+    users.splice(index, 1);
+    res.json(users);
   }
 });
 
