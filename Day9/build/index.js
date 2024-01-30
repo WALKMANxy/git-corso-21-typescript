@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const express_validator_1 = require("express-validator");
 const uuid_1 = require("uuid");
 (0, uuid_1.v4)();
 const app = (0, express_1.default)();
@@ -25,27 +26,27 @@ app.get('/posts', async (req, res) => {
 });
 const users = [
     {
-        id: '1',
+        id: (0, uuid_1.v4)(),
         name: 'John',
         surname: 'Doe',
     },
     {
-        id: '2',
+        id: (0, uuid_1.v4)(),
         name: 'Jane',
         surname: 'Smith',
     },
     {
-        id: '3',
+        id: (0, uuid_1.v4)(),
         name: 'Michael',
         surname: 'Johnson',
     },
     {
-        id: '4',
+        id: (0, uuid_1.v4)(),
         name: 'Emily',
         surname: 'Davis',
     },
     {
-        id: '5',
+        id: (0, uuid_1.v4)(),
         name: 'David',
         surname: 'Brown',
     },
@@ -54,12 +55,16 @@ const users = [
 app.get('/users', (req, res) => {
     res.json({ users });
 });
-// Endpoint to create a new user
-app.post('/users', (req, res) => {
-    const { name, surname } = req.body;
-    if (!name || !surname) {
-        return res.status(400).json({ error: 'Name and surname are required in the request body' });
+// Endpoint to create a new user with request body validation
+app.post('/users', [
+    (0, express_validator_1.query)('name').notEmpty().withMessage('Name is required in the request body'),
+    (0, express_validator_1.query)('surname').notEmpty().withMessage('Surname is required in the request body'),
+], (req, res) => {
+    const errors = (0, express_validator_1.validationResult)(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
     }
+    const { name, surname } = req.body;
     const newUser = {
         id: (0, uuid_1.v4)(),
         name,
@@ -72,7 +77,7 @@ app.post('/users', (req, res) => {
 app.get('/users/:id', (req, res) => {
     const userId = req.params.id;
     const user = users.find((u) => u.id === userId);
-    if (!user) {
+    if (user === undefined) {
         res.status(404).json({ error: 'User not found' });
     }
     else {
@@ -87,8 +92,8 @@ app.delete('/users/:id', (req, res) => {
         res.status(404).json({ error: 'User not found' });
     }
     else {
-        const deletedUser = users.splice(index, 1);
-        res.json({ deletedUser: deletedUser[0] });
+        users.splice(index, 1);
+        res.json(users);
     }
 });
 const PORT = 3000;

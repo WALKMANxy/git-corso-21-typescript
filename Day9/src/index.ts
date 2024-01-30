@@ -1,6 +1,5 @@
 import express, {Request, Response} from 'express';
 import { query, validationResult } from 'express-validator';
-
 import {v4 as uuidv4, v4} from 'uuid';
 
 uuidv4();
@@ -58,13 +57,18 @@ app.get('/users', (req: Request, res: Response) => {
   res.json({ users });
 });
 
-// Endpoint to create a new user
-app.post('/users', (req: Request, res: Response) => {
-  const { name, surname } = req.body;
+// Endpoint to create a new user with request body validation
+app.post('/users', [
+  query('name').notEmpty().withMessage('Name is required in the request body'),
+  query('surname').notEmpty().withMessage('Surname is required in the request body'),
+], (req: Request, res: Response) => {
+  const errors = validationResult(req);
 
-  if (!name || !surname) {
-    return res.status(400).json({ error: 'Name and surname are required in the request body' });
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
   }
+
+  const { name, surname } = req.body;
 
   const newUser = {
     id: uuidv4(),
