@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const app = express();
-const { MONGODB_USER, MONGODB_PASSWORD, MONGODB_CLUSTER, PORT = 3000 } = process.env;
+const { MONGODB_USER, MONGODB_PASSWORD, MONGODB_CLUSTER, PORT = 3003 } = process.env;
 const url = `mongodb+srv://${MONGODB_USER}:${MONGODB_PASSWORD}@${MONGODB_CLUSTER}.mongodb.net/`;
 import users from "./routes/users";
 import companies from "./routes/companies";
@@ -26,3 +26,9 @@ app.use("/companies", companies);
 app.use("/auth", auth);
 
 app.listen(PORT, () => console.log(`Server is runnning on port: ${PORT}`));
+
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error(err.stack);
+  res.status(500).send('Something went wrong!');
+});
+

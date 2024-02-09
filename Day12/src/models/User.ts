@@ -2,7 +2,7 @@ import { Document, Schema, model } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
 
-type User = {
+export type User = {
   _id: string;
   name: string;
   email: string;
@@ -11,7 +11,7 @@ type User = {
   verificationToken: string | null;
 };
 
-type UserDocument = Document & User;
+export type UserDocument = Document & User;
 
 const userSchema = new Schema<UserDocument>({
   _id: { type: String, default: uuidv4 },
@@ -22,7 +22,7 @@ const userSchema = new Schema<UserDocument>({
   verificationToken: { type: String, default: null },
 });
 
-
+// Hash the password before saving to the database
 userSchema.pre<UserDocument>("save", async function (next) {
   const user = this;
   if (user.isModified("password") || user.isNew) {
