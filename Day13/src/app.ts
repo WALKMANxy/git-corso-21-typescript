@@ -1,18 +1,25 @@
 import express, { NextFunction, Request, Response } from "express";
 import { connect } from "mongoose";
 import dotenv from "dotenv";
-dotenv.config();
+import path from 'path';
+
+
+dotenv.config({
+  path: path.join(__dirname, `../env/${process.env.NODE_ENV}`)
+});
+
 
 const app = express();
-const { MONGODB_USER, MONGODB_PASSWORD, MONGODB_CLUSTER, PORT = 3003 } = process.env;
-const url = `mongodb+srv://${MONGODB_USER}:${MONGODB_PASSWORD}@${MONGODB_CLUSTER}.mongodb.net/`;
+const { MONGODB, PORT = 3003 } = process.env;
+const url = `${MONGODB}`;
 import users from "./routes/users";
 import companies from "./routes/companies";
 import auth from "./routes/auth";
 
 
 
-connect(url)
+
+export const connection = connect(url)
   .then(() => {
     console.log("Connected to MongoDB");
   })
@@ -32,3 +39,4 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   res.status(500).send('Something went wrong!');
 });
 
+export default app;

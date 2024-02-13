@@ -5,9 +5,9 @@
   "main": "app.js",
   "scripts": {
     "build": "tsc",
-    "start": "npm run build && node dist/app.js",
-    "dev": "nodemon src/app.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "cross-env NODE_ENV=stage npm run build && node dist/app.js",
+    "dev": "cross-env NODE_ENV=stage nodemon src/app.ts",
+    "test": "cross-env NODE_ENV=test mocha  './dist/tests/*.js"
   },
   "keywords": [],
   "author": "",
