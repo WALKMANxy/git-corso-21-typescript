@@ -4,19 +4,17 @@ import dotenv from "dotenv";
 import path from 'path';
 
 
-dotenv.config({
-  path: path.join(__dirname, `../env/${process.env.NODE_ENV}`)
-});
 
+dotenv.config({
+  path: path.resolve(__dirname, `../.env.${process.env.NODE_ENV}`);
+});
 
 const app = express();
 const { MONGODB, PORT = 3003 } = process.env;
-const url = `${MONGODB}`;
+const url = `mongodb+srv://${MONGODB}`;
 import users from "./routes/users";
 import companies from "./routes/companies";
 import auth from "./routes/auth";
-
-
 
 
 export const connection = connect(url)
