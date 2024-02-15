@@ -9,8 +9,14 @@ dotenv.config({
   path: path.resolve(__dirname, `../.env.${process.env.NODE_ENV}`),
 });
 
+//Just to be safe
+console.log(process.env.NODE_ENV)
+
+
+
 const app = express();
-const { MONGODB, PORT = 3003 } = process.env;
+const { MONGODB, PORT = 3000 } = process.env;
+console.log(MONGODB)
 const url = `mongodb+srv://${MONGODB}`;
 import users from "./routes/users";
 import companies from "./routes/companies";

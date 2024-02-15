@@ -11,7 +11,7 @@ export const verify = async (req: AuthenticatedRequest, res: Response, next: Nex
   const token = req.header('Authorization')?.replace('Bearer ', '');
 
   if (!token) {
-    return res.status(401).send('Unauthorized');
+    return res.status(401).json({ message: 'Unauthorized' });
   }
 
   try {
@@ -22,13 +22,13 @@ export const verify = async (req: AuthenticatedRequest, res: Response, next: Nex
     const user = await User.findById(decoded.userId);
 
     if (!user) {
-      return res.status(401).send('Unauthorized');
+      return res.status(401).json({ message: 'Unauthorized' });
     }
 
     req.user = user;
     next();
   } catch (error) {
     console.error(error);
-    res.status(401).send('Unauthorized');
+    res.status(401).json({ message: 'Unauthorized' });
   }
 };

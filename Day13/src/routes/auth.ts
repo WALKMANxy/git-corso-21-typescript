@@ -123,11 +123,30 @@ interface AuthenticatedCompanyRequest extends Request {
   company?: CompanyDocument;
 }
 
+
 // Me endpoint for users - protected by verify middleware
 router.get('/users/me', verify, (req: AuthenticatedUserRequest, res: Response) => {
   // The user is authenticated, and req.user contains the decoded token payload
   const user = req.user;
-  res.json({ user });
+
+  // Ensure that the user information is correctly extracted from the token
+  if (!user || !user.id) {
+    return res.status(400).json({ message: 'Invalid user data in the token' });
+  }
+
+  // Retrieve the user details from the database using the user ID
+  User.findById(user.id)
+    .then((foundUser) => {
+      if (!foundUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      res.json({ user: foundUser });
+    })
+    .catch((error) => {
+      console.error('Error fetching user from the database:', error);
+      res.status(500).json({ message: 'Internal Server Error' });
+    });
 });
 
 // Update me endpoint for users - protected by verify middleware
@@ -136,36 +155,44 @@ router.put('/users/me', verify, [
   body('email').isEmail().normalizeEmail(),
   body('password').isLength({ min: 6 }).optional(),
 ], async (req: AuthenticatedUserRequest, res: Response) => {
-  // The user is authenticated, and req.user contains the decoded token payload
-  const user = req.user as UserDocument;
-
-  // Validate request body
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  // Update user profile
-  user.name = req.body.name;
-  user.email = req.body.email;
-
-  if (req.body.password) {
-    // If a new password is provided, update the password
-    const salt = await bcrypt.genSalt(10);
-    const hash = await bcrypt.hash(req.body.password, salt);
-    user.password = hash;
-  }
-
   try {
+    // The user is authenticated, and req.user contains the decoded token payload
+    const user = req.user as UserDocument;
+
+    // Validate request body
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    // Update user profile
+    user.name = req.body.name;
+    user.email = req.body.email;
+
+    if (req.body.password) {
+      // If a new password is provided, update the password
+      const salt = await bcrypt.genSalt(10);
+      const hash = await bcrypt.hash(req.body.password, salt);
+      user.password = hash;
+    }
+
     await user.save();
     res.json({ message: 'Profile updated successfully' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating profile:', error);
+
+    // Check if the error is due to unauthorized access
+    if (error.message === 'Unauthorized') {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 
-// Me endpoint for companies - protected by verify middleware
+
+
+// Get me endpoint for companies - protected by verify middleware
 router.get('/companies/me', verify, (req: AuthenticatedCompanyRequest, res: Response) => {
   // The company is authenticated, and req.company contains the decoded token payload
   const company = req.company;
@@ -179,26 +206,32 @@ router.put('/companies/me', verify, [
   body('email').isEmail().normalizeEmail(),
   body('address').notEmpty().trim(),
 ], async (req: AuthenticatedCompanyRequest, res: Response) => {
-  // The company is authenticated, and req.company contains the decoded token payload
-  const company = req.company as CompanyDocument;
-
-  // Validate request body
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  // Update company profile
-  company.name = req.body.name;
-  company.industry = req.body.industry;
-  company.email = req.body.email;
-  company.address = req.body.address;
-
   try {
+    // The company is authenticated, and req.company contains the decoded token payload
+    const company = req.company as CompanyDocument;
+
+    // Validate request body
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    // Update company profile
+    company.name = req.body.name;
+    company.industry = req.body.industry;
+    company.email = req.body.email;
+    company.address = req.body.address;
+
     await company.save();
     res.json({ message: 'Profile updated successfully' });
-  } catch (error) {
-    console.error('Error updating profile:', error);
+  } catch (error: any) {
+    console.error('Error updating company profile:', error);
+
+    // Check if the error is due to unauthorized access
+    if (error.name === 'UnauthorizedError') {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
     res.status(500).json({ message: 'Internal Server Error' });
   }
 });

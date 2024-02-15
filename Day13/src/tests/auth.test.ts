@@ -13,7 +13,7 @@ describe('Testing signup process and that all data is valid.', () => {
         });
 
         after(async function () {
-          this.timeout(15000); // Set the timeout to 15 seconds
+          this.timeout(15000); 
       
           try {
               if (userId) {
@@ -22,7 +22,7 @@ describe('Testing signup process and that all data is valid.', () => {
                   // Delete the user created during the test
                   const deletionResult = await User.findByIdAndDelete(userId);
       
-                  console.log("Deletion result:", deletionResult);
+                   console.log("Deletion result:", deletionResult);
                 }
               console.log("Cleanup Successful");
           } catch (err) {
@@ -33,7 +33,7 @@ describe('Testing signup process and that all data is valid.', () => {
       
 
 
-    it('should create a new user and return 201 with user details', async () => {
+    it('Should create a new user and return 201 with user details', async () => {
       // Define the user data for signup
       const userData = {
         name: 'John Doe',
@@ -65,7 +65,7 @@ describe('Testing signup process and that all data is valid.', () => {
       assert.isDefined(createdUser);
       assert.equal(createdUser?.name, userData.name);
       assert.equal(createdUser?.email, userData.email);
-      assert.isTrue(createdUser?.isVerified === false); // Assuming isVerified starts as false
+      assert.isTrue(createdUser?.isVerified === false); // isVerified starts as false
       assert.equal(createdUser?.verificationToken, body.user.verificationToken);
 
       userId = body.user.id;
@@ -92,11 +92,11 @@ describe('Testing error cases for the signup process.', () => {
       // Cleanup: Delete the user created during the test
       try{
         if (userId) {
-        console.log("User id 1 to delete", userId);
+        
         await User.findByIdAndDelete(userId);
         }
         if (userId2) {
-        console.log("User id 2 to delete", userId2);
+        
         await User.findByIdAndDelete(userId2);
         }
         console.log("Cleanup Successful");
@@ -219,6 +219,66 @@ describe('Account Verification', () => {
     }
   });
 
+  it('Should successfully verify the user account, expect 201', async () => {
+    // Create a user and get the verification token
+    const userData = {
+      name: 'Samuel Doe',
+      email: 'samuel.doe@example.com',
+      password: 'StrongPassword123!',
+    };
+
+    const signupResponse = await request(app)
+      .post('/auth/signup')
+      .send(userData)
+      .expect(201);
+
+    const { body } = signupResponse;
+    userId = body.user.id;
+    verificationToken = body.user.verificationToken;
+
+    // Send a request to the verification endpoint
+    const verificationResponse = await request(app)
+      .get(`/auth/verify/${verificationToken}`)
+      .expect(200); 
+
+    
+    assert.equal(verificationResponse.body.message, 'Verification successful. You can now log in.');
+   
+  });
+
+  it('Should handle invalid verification tokens, expect 404', async () => {
+    const invalidToken = 'invalidToken';
+
+    const { status } = await request(app)
+      .get(`/auth/verify/${invalidToken}`)
+      .expect(404);
+
+    assert.equal(status, 404);
+  });
+});
+
+describe('Account Verification and Login, use cases, expect 201, 200 ', () => {
+  let userId: string;
+  let verificationToken: string;
+
+  before(async function () {
+    this.timeout(15000); // Set the timeout to 15 seconds
+    await connection;
+  });
+
+  after(async () => {
+    // Cleanup: Delete the user created during the test
+    try {
+      if (userId) {
+        console.log("User id to delete:", userId);
+        await User.findByIdAndDelete(userId);
+      }
+      console.log("Cleanup Successful");
+    } catch (err) {
+      console.log("Couldn't cleanup users", err);
+    }
+  });
+
   it('should successfully verify the user account', async () => {
     // Create a user and get the verification token
     const userData = {
@@ -241,72 +301,12 @@ describe('Account Verification', () => {
       .get(`/auth/verify/${verificationToken}`)
       .expect(200); 
 
-    // Add assertions based on your verification implementation
+    
     assert.equal(verificationResponse.body.message, 'Verification successful. You can now log in.');
-    // Add more assertions as needed
+    
   });
 
-  it('should handle invalid verification tokens', async () => {
-    const invalidToken = 'invalidToken';
-
-    const { status } = await request(app)
-      .get(`/auth/verify/${invalidToken}`)
-      .expect(404);
-
-    assert.equal(status, 404);
-  });
-});
-
-describe('Account Verification and Login, use cases', () => {
-  let userId: string;
-  let verificationToken: string;
-
-  before(async function () {
-    this.timeout(15000); // Set the timeout to 15 seconds
-    await connection;
-  });
-
-  after(async () => {
-    // Cleanup: Delete the user created during the test
-    try {
-      if (userId) {
-        console.log("User id to delete:", userId);
-        await User.findByIdAndDelete(userId);
-      }
-      console.log("Cleanup Successful");
-    } catch (err) {
-      console.log("Couldn't cleanup users", err);
-    }
-  });
-
-  it('should successfully verify the user account', async () => {
-    // Create a user and get the verification token
-    const userData = {
-      name: 'Samuel Doe',
-      email: 'samuel.doe@example.com',
-      password: 'StrongPassword123!',
-    };
-
-    const signupResponse = await request(app)
-      .post('/auth/signup')
-      .send(userData)
-      .expect(201);
-
-    const { body } = signupResponse;
-    userId = body.user.id;
-    verificationToken = body.user.verificationToken;
-
-    // Send a request to the verification endpoint
-    const verificationResponse = await request(app)
-      .get(`/auth/verify/${verificationToken}`)
-      .expect(200); // Assuming you return a 200 status upon successful verification
-
-    // Add assertions based on your verification implementation
-    assert.equal(verificationResponse.body.message, 'Verification successful. You can now log in.');
-    // Add more assertions as needed
-  });
-
-  it('should successfully log in with valid credentials', async () => {
+  it('Should successfully log in with valid credentials, expect 200', async () => {
     const loginData = {
       email: 'samuel.doe@example.com',
       password: 'StrongPassword123!',
@@ -321,7 +321,7 @@ describe('Account Verification and Login, use cases', () => {
     assert.isDefined(body.token);
   });
 
-  it('should handle invalid credentials during login', async () => {
+  it('Should handle invalid credentials during login, expect 401', async () => {
     const invalidLoginData = {
       email: 'samuel.doe@example.com',
       password: 'InvalidPassword',
@@ -329,9 +329,11 @@ describe('Account Verification and Login, use cases', () => {
 
     const { status, body } = await request(app)
       .post('/auth/login')
-      .send(invalidLoginData);
+      .send(invalidLoginData)
+      .expect(401);
 
-    assert.equal(status, 401);
+
+    
     assert.equal(body.message, 'Invalid credentials');
   });
 });
@@ -351,16 +353,16 @@ describe('Account Verification and Login, /me endpoint', () => {
     // Cleanup: Delete the user created during the test
     try {
       if (userId) {
-        console.log("User id to delete:", userId);
+        
         await User.findByIdAndDelete(userId);
       }
-      console.log("Cleanup Successful");
-    } catch (err) {
-      console.log("Couldn't cleanup users", err);
+        console.log("Cleanup Successful");
+  } catch (err) {
+        console.log("Couldn't cleanup users", err);
     }
   });
 
-  it('should successfully verify the user account', async () => {
+  it('Should successfully verify the user account, expect 201, 200', async () => {
     // Create a user and get the verification token
     const userData = {
       name: 'Samuel Doe',
@@ -380,14 +382,13 @@ describe('Account Verification and Login, /me endpoint', () => {
     // Send a request to the verification endpoint
     const verificationResponse = await request(app)
       .get(`/auth/verify/${verificationToken}`)
-      .expect(200); // Assuming you return a 200 status upon successful verification
+      .expect(200); 
 
-    // Add assertions based on your verification implementation
+    
     assert.equal(verificationResponse.body.message, 'Verification successful. You can now log in.');
-    // Add more assertions as needed
   });
 
-  it('should successfully log in with valid credentials', async () => {
+  it('Should successfully log in with valid credentials, expect 200', async () => {
     const loginData = {
       email: 'samuel.doe@example.com',
       password: 'StrongPassword123!',
@@ -403,53 +404,63 @@ describe('Account Verification and Login, /me endpoint', () => {
     assert.isDefined(body.token);
   });
 
-  it('should return the user profile for an authenticated user', async () => {
-    console.log(authToken);
+  it('Should return the user profile for an authenticated user, expect 200', async () => {
     const response = await request(app)
-      .get('/users/me')
+      .get('/auth/users/me') 
       .set('Authorization', `Bearer ${authToken}`)
       .expect(200);
 
     assert.isDefined(response.body.user);
-    });
-  
+});
 
-  it('should update the user profile for an authenticated user', async () => {
-      const updatedUserData = {
+it('Should update the user profile for an authenticated user, expect 200', async () => {
+    const updatedUserData = {
         name: 'Timothy Doe',
         email: 'timothy.doe@example.com',
         password: 'NewPassword123!',
-      };
+    };
 
-      const response = await request(app)
-        .put('/users/me')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(updatedUserData)
-        .expect(200);
+    const response = await request(app)
+      .put('/auth/users/me') 
+      .set('Authorization', `Bearer ${authToken}`)
+      .send(updatedUserData)
+      .expect(200);
 
-      assert.equal(response.body.message, 'Profile updated successfully');
-     
-    });  
-  it('should handle validation errors', async () => {
-      // Send an invalid request body (e.g., missing required fields)
-      const invalidUserData = {};
+    assert.equal(response.body.message, 'Profile updated successfully');
+});
 
-      const response = await request(app)
-        .put('/users/me')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send(invalidUserData)
-        .expect(400);
+it('Should handle validation errors, expect 400', async () => {
+    // Send an invalid request body 
+    const invalidUserData = {};
 
-      assert.isDefined(response.body.errors);
-      // Add more assertions as needed
+    const response = await request(app)
+      .put('/auth/users/me') 
+      .set('Authorization', `Bearer ${authToken}`)
+      .send(invalidUserData)
+      .expect(400);
+
+    assert.isDefined(response.body.errors);
+  });
+
+it('Should handle unauthorized access, expect 401', async () => {
+
+  const updatedUserData = {
+    name: 'Timothy Doe',
+    email: 'timothy.doe@example.com',
+    password: 'NewPassword123!',
+};  
+
+  const invalidToken = 'invalidToken';
+
+    // Make a request without setting the Authorization header
+    const response = await request(app)
+      .put('/auth/users/me') // Corrected path
+      .set('Authorization', `Bearer ${invalidToken}`)
+      .send(updatedUserData)
+      .expect(401);
+
+    assert.equal(response.body.message, 'Unauthorized');
     });
-    it('should handle unauthorized access', async () => {
-      // Make a request without setting the Authorization header
-      const response = await request(app)
-        .put('/users/me')
-        .expect(401);
 
-      assert.equal(response.body.message, 'Unauthorized');
-    });
-  }); 
 
+});
