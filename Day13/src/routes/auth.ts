@@ -10,37 +10,39 @@ import { verify } from '../middlewares/verification';
 const router = express.Router();
 
 // Signup endpoint
-router.post(
-  '/signup',
-  body('name').notEmpty().trim(),
-  body('email').isEmail().normalizeEmail(),
-  body('password').isLength({ min: 6 }).isStrongPassword(),
-  async (req: Request, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { name, email, password } = req.body;
-
-    try {
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(409).json({ message: 'User with this email already exists' });
+  router.post(
+    '/signup',
+    body('name').notEmpty().trim(),
+    body('email').isEmail().normalizeEmail(),
+    body('password').isLength({ min: 6 }).isStrongPassword(),
+    async (req: Request, res: Response) => {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
       }
 
-      const verificationToken = uuidv4();
+      const { name, email, password } = req.body;
 
-      const newUser = new User({ name, email, password, verificationToken });
-      await newUser.save();
+      try {
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+          return res.status(409).json({ message: 'User with this email already exists' });
+        }
 
-      res.status(201).json({ message: 'User created successfully. Verification token stored.' });
-    } catch (error) {
-      console.error('Error during signup:', error);
-      res.status(500).json({ message: 'Internal Server Error' });
+        const verificationToken = uuidv4();
+
+        const newUser = new User({ name, email, password, verificationToken });
+        await newUser.save();
+
+        res.status(201).json({ message: 'User created successfully. Verification token stored.', 
+        user: { id: newUser._id, verificationToken: newUser.verificationToken } });
+
+      } catch (error) {
+        console.error('Error during signup:', error);
+        res.status(500).json({ message: 'Internal Server Error' });
+      }
     }
-  }
-);
+  );
 
 // Verify endpoint
 router.get('/verify/:token', async (req: Request, res: Response) => {
