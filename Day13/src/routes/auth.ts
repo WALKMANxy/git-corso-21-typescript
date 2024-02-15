@@ -34,8 +34,16 @@ const router = express.Router();
         const newUser = new User({ name, email, password, verificationToken });
         await newUser.save();
 
-        res.status(201).json({ message: 'User created successfully. Verification token stored.', 
-        user: { id: newUser._id, verificationToken: newUser.verificationToken } });
+        const verificationLink = `http://localhost:3000/auth/verify/${newUser.verificationToken}`;
+
+        res.status(201).json({
+          message: `User created successfully. Verify your account using the following link: ${verificationLink}`,
+          user: {
+          id: newUser._id,
+          verificationToken: newUser.verificationToken,
+          }
+});
+
 
       } catch (error) {
         console.error('Error during signup:', error);
