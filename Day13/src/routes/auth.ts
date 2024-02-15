@@ -67,7 +67,7 @@ router.get('/verify/:token', async (req: Request, res: Response) => {
     user.verificationToken = null;
     await user.save();
 
-    res.json({ message: 'Verification successful. You can now log in.' });
+    res.status(200).json({ message: 'Verification successful. You can now log in.' });
   } catch (error) {
     console.error('Error during verification:', error);
     res.status(500).json({ message: 'Internal Server Error' });
